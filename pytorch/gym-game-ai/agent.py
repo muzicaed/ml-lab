@@ -89,3 +89,4 @@ class Agent:
     def load_models(self):
         self.actor_net.load()
         self.critic_net.load()
+        print('Models loaded')
