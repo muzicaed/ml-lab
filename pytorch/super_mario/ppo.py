@@ -20,12 +20,12 @@ def get_device():
     return T.device('cpu')
 
 
-class ActorNetwork(nn.Module):
+class ActorNet(nn.Module):
     def __init__(self, no_of_actions, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
-        super(ActorNetwork, self).__init__()
+        super(ActorNet, self).__init__()
 
         self.actor = nn.Sequential(
-            nn.Linear(input_dims, fc1),
+            nn.Linear(*input_dims, fc1),
             nn.ReLU(),
             nn.Linear(fc1, fc2),
             nn.ReLU(),
@@ -49,12 +49,12 @@ class ActorNetwork(nn.Module):
         self.load_state_dict(T.load(self.save_file))
 
 
-class CriticNetwork(nn.Module):
+class CriticNet(nn.Module):
     def __init__(self, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
-        super(CriticNetwork, self).__init__()
+        super(CriticNet, self).__init__()
 
         self.critic = nn.Sequential(
-            nn.Linear(input_dims, fc1),
+            nn.Linear(*input_dims, fc1),
             nn.ReLU(),
             nn.Linear(fc1, fc2),
             nn.ReLU(),
@@ -76,7 +76,7 @@ class CriticNetwork(nn.Module):
         self.load_state_dict(T.load(self.save_file))
 
 
-class PPOMemory:
+class Memory:
 
     def __init__(self, batch_size):
         self.states = []

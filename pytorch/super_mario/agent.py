@@ -1,34 +1,25 @@
 import numpy as np
 import torch as T
-from ppo import ActorNetwork, CriticNetwork, PPOMemory
+from ppo import ActorNet, CriticNet, Memory
 
-BATCH_SIZE = 64
 POLICY_CLIP = 0.2
 
 
 class Agent:
-    def __init__(self, actions_count, inputs_dim, learning_rate, discount_factor, tradeoff, steps_before_update=2048, no_of_epochs=10):
-        self.learning_rate = learning_rate  # Alpha
-        self.discount_factor = discount_factor  # Gamma
-        self.tradeoff = tradeoff  # Lamda
-        self.steps_before_update = steps_before_update  # N
+    # learning_rate Alpha
+    # discount_factor Gamma
+    # tradeoff Lamda
+    def __init__(self, actions_count, inputs_dim, learning_rate, discount_factor, tradeoff, no_of_epochs=10, batch_size=64):
+        self.discount_factor = discount_factor
+        self.tradeoff = tradeoff
         self.no_of_epochs = no_of_epochs
 
-        self.actor_net = ActorNetwork(actions_count, inputs_dim, self.learning_rate)
-        self.critic_net = CriticNetwork(inputs_dim, self.learning_rate)
-        self.memory = PPOMemory(BATCH_SIZE)
+        self.actor_net = ActorNet(actions_count, inputs_dim, learning_rate)
+        self.critic_net = CriticNet(inputs_dim, learning_rate)
+        self.memory = Memory(batch_size)
 
     def remember(self, state, action, probs, values, reward, done):
         self.memory.store(state, action, probs, values, reward, done)
-
-    def save_models(self):
-        self.actor_net.save()
-        self.critic_net.save()
-        print('Models saved')
-
-    def load_models(self):
-        self.actor_net.load()
-        self.critic_net.load()
 
     def choose_action(self, state):
         state_tensor = T.tensor([state], dtype=T.float).to(self.actor_net.device)
@@ -52,22 +43,23 @@ class Agent:
                 discount = 1
                 advantage_t = 0
                 for k in range(time_step, rewards_len):
-                    advantage_t = self.__calc_t_advantage(discount, rewards[k], values[k+1], dones[k], values[k])
+                    advantage_t += self.__calc_t_advantage(discount, rewards[k], values[k], values[k+1], dones[k], )
                     discount *= self.discount_factor * self.tradeoff
 
                 advantage[time_step] = advantage_t
 
-            advantage_tensor = T.tensor(advantage)
-            values_tensor = T.tensor(values)
+            advantage_tensor = T.tensor(advantage).to(self.actor_net.device)
+            values_tensor = T.tensor(values).to(self.critic_net.device)
 
             for batch in batches:
-                states = T.tensor(states[batch], dtype=T.float)
-                old_probs = T.tensor(old_probs[batch])
-                actions = T.tensor(actions[batch])
+                states = T.tensor(states[batch], dtype=T.float).to(self.actor_net.device)
+                old_probs = T.tensor(old_probs[batch]).to(self.actor_net.device)
+                actions = T.tensor(actions[batch]).to(self.actor_net.device)
 
                 distribution = self.actor_net(states)
                 critic_value = self.critic_net(states)
                 critic_value = T.squeeze(critic_value)
+
                 new_probs = distribution.log_prob(actions)
                 prob_ratio = (new_probs - old_probs).exp()
                 w_probs = prob_ratio * advantage_tensor[batch]
@@ -86,5 +78,14 @@ class Agent:
 
         self.memory.clear()
 
-    def __calc_t_advantage(self, discount, reward, next_value, done, value):
+    def __calc_t_advantage(self, discount, reward, value, next_value, done):
         return discount * (reward + self.discount_factor * next_value * (1-int(done)) - value)
+
+    def save_models(self):
+        self.actor_net.save()
+        self.critic_net.save()
+        print('Models saved')
+
+    def load_models(self):
+        self.actor_net.load()
+        self.critic_net.load()
