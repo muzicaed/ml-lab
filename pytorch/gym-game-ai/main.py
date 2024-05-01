@@ -4,14 +4,14 @@ from agent import Agent
 from plot import plot_learning_curve
 from game import Game
 
-NO_OF_GAMES = 300
-STEPS_BEFORE_LEARN = 20
+NO_OF_GAMES = 500
+STEPS_BEFORE_LEARN = 50
 PLOT_FILE = '/Users/mikaelhellman/dev/ml-lab/pytorch/gym-game-ai/plot_learning.png'
 NO_OF_EPOCHS = 4
-ALLOWED_STEPS_PER_GAME = 1000
+ALLOWED_STEPS_PER_GAME = 2000
 
 if __name__ == '__main__':
-    game = Game()
+    game = Game("human")
     env = game.get_env()
 
     best_score = env.reward_range[0]
@@ -28,7 +28,7 @@ if __name__ == '__main__':
                   no_of_epochs=NO_OF_EPOCHS,
                   batch_size=5)
 
-    # agent.load_models()
+    agent.load_models()
 
     for i in range(NO_OF_GAMES):
         state = game.reset()
@@ -53,13 +53,13 @@ if __name__ == '__main__':
                 break
 
         reward_score_history.append(reward_score)
-        avg_reward_score = np.mean(reward_score_history[-25:])
+        avg_reward_score = np.mean(reward_score_history[-50:])
 
         if avg_reward_score > best_score or reward_score * 3 > best_score:
             best_score = avg_reward_score
             agent.save_models()
 
-        print(f'Game: {i}, Score: {reward_score}, Avg: {int(avg_reward_score)}, Steps: {steps_in_game_count}, Learn itr: {learn_iterations}')
+        print(f'Game: {i}, Score: {int(reward_score)}, Avg: {int(avg_reward_score)}, Steps: {steps_in_game_count}, Learn itr: {learn_iterations}')
 
     x = [i + 1 for i in range(len(reward_score_history))]
     plot_learning_curve(x, reward_score_history, PLOT_FILE)
