@@ -1,6 +1,5 @@
 import numpy as np
 import torch as T
-from plot import plot
 from ppo import ActorNetwork, CriticNetwork, PPOMemory
 
 BATCH_SIZE = 64
@@ -8,16 +7,15 @@ POLICY_CLIP = 0.2
 
 
 class Agent:
-    def __init__(self, actions_count, learning_rate, discount_factor, randomness, tradeoff, steps_before_update=2048, no_of_epochs=10):
+    def __init__(self, actions_count, inputs_dim, learning_rate, discount_factor, tradeoff, steps_before_update=2048, no_of_epochs=10):
         self.learning_rate = learning_rate  # Alpha
         self.discount_factor = discount_factor  # Gamma
-        self.randomness = randomness  # Epsilon
         self.tradeoff = tradeoff  # Lamda
         self.steps_before_update = steps_before_update  # N
         self.no_of_epochs = no_of_epochs
 
-        self.actor_net = ActorNetwork(actions_count, self.learning_rate, 7, fc1=256, fc2=256,)
-        self.critic_net = CriticNetwork(actions_count, self.learning_rate)
+        self.actor_net = ActorNetwork(actions_count, inputs_dim, self.learning_rate)
+        self.critic_net = CriticNetwork(inputs_dim, self.learning_rate)
         self.memory = PPOMemory(BATCH_SIZE)
 
     def remember(self, state, action, probs, values, reward, done):
@@ -32,8 +30,8 @@ class Agent:
         self.actor_net.load()
         self.critic_net.load()
 
-    def choose_action(self, observation):
-        state_tensor = T.tensor([observation], dtype=T.float)
+    def choose_action(self, state):
+        state_tensor = T.tensor([state], dtype=T.float).to(self.actor_net.device)
         distribution = self.actor_net(state_tensor)
         value = self.critic_net(state_tensor)
         action = distribution.sample()
@@ -63,8 +61,8 @@ class Agent:
             values_tensor = T.tensor(values)
 
             for batch in batches:
-                states = T. tensor(states[batch], type=T.float)
-                old_probs = T. tensor(old_probs[batch])
+                states = T.tensor(states[batch], dtype=T.float)
+                old_probs = T.tensor(old_probs[batch])
                 actions = T.tensor(actions[batch])
 
                 distribution = self.actor_net(states)

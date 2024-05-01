@@ -8,11 +8,24 @@ from torch.distributions.categorical import Categorical
 DEFAULT_SAVE_DIR = '/Users/mikaelhellman/dev/ml-lab/model/ppo'
 
 
+def get_device():
+    if (T.cuda.is_available()):
+        print('Using CUDA')
+        return T.device('cuda:0')
+    # elif (T.backends.mps.is_available()):
+    #    print('Using MPS')
+    #    return T.device('mps')
+
+    print('Using CPU')
+    return T.device('cpu')
+
+
 class ActorNetwork(nn.Module):
-    def _init__(self, no_of_actions, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
+    def __init__(self, no_of_actions, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
         super(ActorNetwork, self).__init__()
+
         self.actor = nn.Sequential(
-            nn.Linear(*input_dims, fc1),
+            nn.Linear(input_dims, fc1),
             nn.ReLU(),
             nn.Linear(fc1, fc2),
             nn.ReLU(),
@@ -20,6 +33,8 @@ class ActorNetwork(nn.Module):
             nn.Softmax(dim=-1)
         )
 
+        self.device = get_device()
+        self.to(self.device)
         self.optimizer = optim.Adam(self.parameters(), learning_rate)
         self.save_file = os.path.join(save_dir, 'actor_ppo')
 
@@ -35,16 +50,19 @@ class ActorNetwork(nn.Module):
 
 
 class CriticNetwork(nn.Module):
-    def _init__(self, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
+    def __init__(self, input_dims, learning_rate, fc1=256, fc2=256, save_dir=DEFAULT_SAVE_DIR):
         super(CriticNetwork, self).__init__()
+
         self.critic = nn.Sequential(
-            nn.Linear(*input_dims, fc1),
+            nn.Linear(input_dims, fc1),
             nn.ReLU(),
             nn.Linear(fc1, fc2),
             nn.ReLU(),
             nn.Linear(fc2, 1),
         )
 
+        self.device = get_device()
+        self.to(self.device)
         self.optimizer = optim.Adam(self.parameters(), learning_rate)
         self.save_file = os.path.join(save_dir, 'critic_ppo')
 
@@ -72,9 +90,9 @@ class PPOMemory:
     def create_batches(self):
         states_count = len(self.states)
         batch_start = np.arange(0, states_count, self.batch_size)
-        indices = np.arange(states_count, dtype=np. int64)
+        indices = np.arange(states_count, dtype=np.int64)
         np.random.shuffle(indices)
-        batches = [indices[i: i+self.batch_size] for i in batch_start]
+        batches = [indices[i: self.batch_size] for i in batch_start]
 
         return np.array(self.states), np.array(self.actions), \
             np.array(self.probs), np.array(self.values), \
