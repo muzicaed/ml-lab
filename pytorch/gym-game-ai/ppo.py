@@ -12,9 +12,9 @@ def get_device():
     if (T.cuda.is_available()):
         print('Using CUDA')
         return T.device('cuda:0')
-    elif (T.backends.mps.is_available()):
-        print('Using MPS')
-        return T.device('mps')
+    # elif (T.backends.mps.is_available()):
+    #    print('Using MPS')
+    #    return T.device('mps')
 
     print('Using CPU')
     return T.device('cpu')
