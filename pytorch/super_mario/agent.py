@@ -1,9 +1,7 @@
-from matplotlib import pyplot as plt
 import numpy as np
 import torch as T
 from plot import plot
-from pytorch.super_mario.ppo import ActorNetwork, CriticNetwork, PPOMemory
-from smb import SuperMario
+from ppo import ActorNetwork, CriticNetwork, PPOMemory
 
 BATCH_SIZE = 64
 POLICY_CLIP = 0.2
