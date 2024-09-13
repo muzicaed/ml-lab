@@ -1,8 +1,8 @@
 import pygame
-import random
 from enum import Enum
 from collections import namedtuple
 import numpy as np
+import secrets
 
 pygame.init()
 font = pygame.font.Font('/Users/mikaelhellman/dev/ml-lab/pytorch/snake/arial.ttf', 25)
@@ -54,8 +54,8 @@ class SnakeGameAI:
 
     def _place_food(self):
         self.frame_iteration = 0
-        x = random.randint(0, (self.w-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
-        y = random.randint(0, (self.h-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
+        x = secrets.SystemRandom().randint(0, (self.w-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
+        y = secrets.SystemRandom().randint(0, (self.h-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
         self.food = Point(x, y)
         if self.food in self.snake:
             self._place_food()
