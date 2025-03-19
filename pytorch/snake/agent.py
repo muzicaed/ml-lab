@@ -1,12 +1,12 @@
 import os
 import torch
-import random
 import numpy as np
 from collections import deque
 from snake import SnakeGameAI, Direction, Point, BLOCK_SIZE
 from model import Linear_QNet, QTrainer
 from IPython import display
 import matplotlib.pyplot as plt
+import secrets
 
 SAVE_PATH = '/Users/mikaelhellman/dev/ml-lab/model/snake-model.pth'
 plt.ion()
@@ -76,7 +76,7 @@ class Agent:
 
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
-            mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
+            mini_sample = secrets.SystemRandom().sample(self.memory, BATCH_SIZE)  # list of tuples
         else:
             mini_sample = self.memory
 
@@ -90,9 +90,9 @@ class Agent:
         # tradeoff explore / eploit
         self.epsilon = 100 - self.n_games
         final_move = [0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
+        if secrets.SystemRandom().randint(0, 200) < self.epsilon:
             print('Random move!')
-            moveIdx = random.randint(0, 2)
+            moveIdx = secrets.SystemRandom().randint(0, 2)
             final_move[moveIdx] = 1
         else:
             state_tensor = torch.tensor(state, dtype=torch.float)
